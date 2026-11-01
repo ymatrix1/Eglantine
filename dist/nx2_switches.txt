@@ -1,4 +1,4 @@
-# Switch NX2 - read when the Eglantine GUI starts.
+# Switch NX2 - read at every start of Eglantine (GUI and CLI alike).
 # One NAME=VALUE per line. Lines starting with # are ignored.
 # A variable already set in the environment wins over this file.
 # Between files, the user copy (%APPDATA%\eden\nx2_switches.txt, or
@@ -26,3 +26,9 @@ EDEN_NX2_FENCE_BATCH=1
 #EDEN_NX2_SPLIT_SKIP=1
 #EDEN_NX2_AUTO_STUB=1
 #EDEN_NX2_KEEP_ASTC=1
+
+# --- limits / tuning ---
+#EDEN_NX2_VRAM_LIMIT_MIB=8192
+#EDEN_NX2_GPU_PROFILE=0
+#EDEN_NX2_TC_EXPECTED_MIB=21322
+#EDEN_NX2_TC_CRITICAL_MIB=22346
