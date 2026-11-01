@@ -51,7 +51,7 @@ public:
 
     /// Returns true if a region has been modified from the CPU
     [[nodiscard]] bool IsRegionCpuModified(VAddr query_cpu_addr, u64 query_size) noexcept {
-        return IteratePages<true>(query_cpu_addr, query_size, [](Manager* manager, u64 offset, size_t size) {
+        return IteratePages<false>(query_cpu_addr, query_size, [](Manager* manager, u64 offset, size_t size) {
             return manager->IsRegionModified(Type::CPU, offset, size);
         });
     }
