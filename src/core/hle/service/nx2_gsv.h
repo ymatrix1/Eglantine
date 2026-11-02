@@ -23,6 +23,10 @@
 #include <mutex>
 #include <vector>
 
+#if defined(_M_X64) || defined(_M_IX86) || defined(__x86_64__) || defined(__i386__)
+#include <immintrin.h>
+#endif
+
 #include "common/alignment.h"
 #include "common/div_ceil.h"
 #include "common/settings.h"
@@ -1412,6 +1416,9 @@ public:
             // in an 18 minute session).
             {104, &INx2Vi2Session::SucceedQuietly, "Unknown104 (display \"default\")"},
             {105, &INx2Vi2Session::SucceedQuietly, "Unknown105 (display \"default\")"},
+            {106, &INx2Vi2Session::SucceedQuietly, "Unknown106 (display \"default\")"},
+            {107, &INx2Vi2Session::SucceedQuietly, "Unknown107 (display \"default\")"},
+            {108, &INx2Vi2Session::SucceedQuietly, "Unknown108 (display \"default\")"},
             {228, &INx2Vi2Session::CancelClientBuffer, "CancelClientBuffer"},
             {229, &INx2Vi2Session::PresentClientBuffer, "PresentClientBuffer"},
         });
@@ -1533,7 +1540,17 @@ private:
             // Running slower than 60 fps: show at once and don't bank the lost time.
             m_next_vblank = now;
         } else if (now < m_next_vblank) {
-            std::this_thread::sleep_until(m_next_vblank);
+            const auto remaining = m_next_vblank - now;
+            if (remaining > std::chrono::milliseconds{2}) {
+                std::this_thread::sleep_for(remaining - std::chrono::milliseconds{1});
+            }
+            while (std::chrono::steady_clock::now() < m_next_vblank) {
+#if defined(_M_X64) || defined(_M_IX86) || defined(__x86_64__) || defined(__i386__)
+                _mm_pause();
+#elif defined(__aarch64__)
+                asm volatile("yield");
+#endif
+            }
         }
         m_next_vblank += interval;
     }
@@ -2864,3 +2881,5 @@ private:
 };
 
 } // namespace Service
+
+
