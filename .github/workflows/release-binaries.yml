@@ -42,8 +42,9 @@ jobs:
     runs-on: ${{ matrix.runner }}
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
-      CCACHE_MAXSIZE: 1500M
+      CCACHE_MAXSIZE: 3000M
       SCCACHE_DIR: ${{ github.workspace }}/.sccache
+      SCCACHE_CACHE_SIZE: 3G
     strategy:
       fail-fast: false
       matrix:
@@ -87,7 +88,9 @@ jobs:
             libswscale-dev pkg-config zlib1g-dev libva-dev libvdpau-dev \
             spirv-tools spirv-headers libusb-1.0-0-dev \
             libboost-dev libboost-fiber-dev libboost-context-dev \
-            libopus-dev libasound2-dev ccache
+            libopus-dev libasound2-dev ccache \
+            libxcb-cursor0 libxcb-icccm4 libxcb-image0 \
+            libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1
 
       # The packages docs/Deps.md lists for macOS, plus ccache.
       - name: Install macOS dependencies
@@ -196,6 +199,7 @@ jobs:
         with:
           msystem: UCRT64
           update: true
+          cache: true
           install: >-
             git make autoconf libtool automake-wrapper patch jq pactoys ninja
           pacboy: >-
@@ -369,9 +373,6 @@ jobs:
           set -euo pipefail
           test -x build/release/bin/eglantine
           test -x build/release/bin/eden-cli
-          # Libraries Qt's xcb platform plugin needs, so linuxdeploy can resolve and bundle them.
-          sudo apt-get install -y --no-install-recommends libxcb-cursor0 libxcb-icccm4 libxcb-image0 \
-            libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1
           tools="$RUNNER_TEMP/linuxdeploy"
           mkdir -p "$tools"
           arch=$(uname -m)   # aarch64 or x86_64
