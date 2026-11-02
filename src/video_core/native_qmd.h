@@ -44,7 +44,7 @@ public:
                 if (request.action == 3 || !state.loaded) {
                     if (!read(request.address, state.descriptor)) return "unmapped QMD";
                     const auto& qmd = state.descriptor;
-                    if ((qmd[18] & 0xff) != 0x30 || (qmd[4] & 0x100)) return "unsupported QMD version or queue";
+                    if (((qmd[18] & 0xff) != 0x30 && (qmd[18] & 0xff) != 0x22) || (qmd[4] & 0x100)) return "unsupported QMD version or queue";
                     if constexpr (std::is_same_v<Dispatch, RejectShaderDispatch>) {
                         if (qmd[12] && (qmd[13] & 0xffff) && (qmd[14] & 0xffff))
                             return "native shader dispatch required";
@@ -77,7 +77,7 @@ public:
             // waiting for its remaining dependencies. Fetch them at execution.
             if (!read(request.address, state.descriptor)) return "unmapped QMD";
             const auto qmd = state.descriptor;
-            if ((qmd[18] & 0xff) != 0x30 || (qmd[4] & 0x100)) return "unsupported QMD version or queue";
+            if (((qmd[18] & 0xff) != 0x30 && (qmd[18] & 0xff) != 0x22) || (qmd[4] & 0x100)) return "unsupported QMD version or queue";
             // Validate the release slots before making any visible.
             for (const Word base : ReleaseSlots) {
                 const Word flags = qmd[base + 1];

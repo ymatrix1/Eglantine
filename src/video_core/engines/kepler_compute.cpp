@@ -126,10 +126,6 @@ bool KeplerCompute::ProcessNativeMethod(Core::System& system, u32 method, u32 ar
         native_macro = native_compute_uploaded ? &native_context->compute_engine : &native_context->engine;
         native_macro_positions = native_compute_uploaded ? std::span<u32>{native_context->compute_positions} : std::span<u32>{native_context->positions};
     }
-    if (method >= native_registers.size()) {
-        LOG_ERROR(HW_GPU, "Native compute method out of range: {:#x}", method);
-        return true;
-    }
     if (method >= 0xe00) {
         if (!native_executing_macro) {
             if (method & 1) { LOG_ERROR(HW_GPU, "Native compute macro starts on argument method"); return true; }
@@ -262,6 +258,10 @@ bool KeplerCompute::ProcessNativeMethod(Core::System& system, u32 method, u32 ar
                 fmt::join(native_parameters, ","));
         }
         native_parameters.clear();
+        return true;
+    }
+    if (method >= native_registers.size()) {
+        LOG_ERROR(HW_GPU, "Native compute method out of range: {:#x}", method);
         return true;
     }
     native_registers[method] = argument;
