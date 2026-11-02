@@ -995,6 +995,11 @@ inline LoweredProgram LowerToMaxwell(std::span<const Instruction> code) {
             emit(base(0x5c08000000000000ULL) | (u64{source} << 20) | (u64{insn.Bits(63, 1)} << 40));
             break;
         }
+        case 0x34e: { // LEPC Rd: Load Effective PC into destination register
+            if (dest >= 246 && dest < 255) return fail(index, "native program uses lowering scratch registers");
+            mov_imm(static_cast<u32>(dest), index * 16);
+            break;
+        }
         case 0x918:
             if (insn.words[1] || insn.words[2]) return fail(index, "native NOP mode");
             emit(0x50b0000000000f00ULL | predicate);
