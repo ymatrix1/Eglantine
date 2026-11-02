@@ -353,10 +353,10 @@ void GraphicsPipeline::AddTransition(GraphicsPipeline* transition) {
 
 template <typename Spec>
 bool GraphicsPipeline::ConfigureImpl(bool is_indexed) {
-    boost::container::small_vector<VideoCommon::ImageViewInOut, 160> views(num_image_elements);
-    boost::container::small_vector<VideoCommon::SamplerId, 96> samplers(num_textures);
-    size_t views_index{};
-    size_t samplers_index{};
+    boost::container::small_vector<VideoCommon::ImageViewInOut, 160> views;
+    boost::container::small_vector<VideoCommon::SamplerId, 96> samplers;
+    views.reserve(num_image_elements);
+    samplers.reserve(num_textures);
 
     namespace Profile = VideoCommon::Nx2Profile;
     {
@@ -405,11 +405,11 @@ bool GraphicsPipeline::ConfigureImpl(bool is_indexed) {
         const auto add_image{[&](const auto& desc, bool blacklist) LAMBDA_FORCEINLINE {
             for (u32 index = 0; index < desc.count; ++index) {
                 const auto handle{read_handle(desc, index)};
-                views[views_index++] = {
+                views.push_back({
                     .index = handle.first,
                     .blacklist = blacklist,
                     .id = {}
-                };
+                });
             }
         }};
         if constexpr (Spec::has_texture_buffers) {
@@ -425,10 +425,10 @@ bool GraphicsPipeline::ConfigureImpl(bool is_indexed) {
         for (const auto& desc : info.texture_descriptors) {
             for (u32 index = 0; index < desc.count; ++index) {
                 const auto handle{read_handle(desc, index)};
-                views[views_index++] = {handle.first};
+                views.push_back({handle.first});
 
                 VideoCommon::SamplerId sampler{texture_cache.GetSamplerId(handle.second, false)};
-                samplers[samplers_index++] = sampler;
+                samplers.push_back(sampler);
             }
         }
         if constexpr (Spec::has_images) {
@@ -457,8 +457,8 @@ bool GraphicsPipeline::ConfigureImpl(bool is_indexed) {
             config_stage(4);
         }
     }
-    ASSERT(views_index == num_image_elements);
-    ASSERT(samplers_index == num_textures);
+    ASSERT(views.size() == num_image_elements);
+    ASSERT(samplers.size() == num_textures);
     {
         Profile::Scope scope{Profile::Zone::FillImageViews};
         texture_cache.FillImageViews(std::span(views.data(), views.size()), false,
