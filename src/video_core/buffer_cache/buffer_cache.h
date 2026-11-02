@@ -387,15 +387,12 @@ void BufferCache<P>::BindGraphicsUniformBuffer(size_t stage, u32 index, GPUVAddr
         channel_state->uniform_buffers[stage][index] = NULL_BINDING;
         return;
     }
-    auto& current = channel_state->uniform_buffers[stage][index];
-    if (current.device_addr == *device_addr && current.size == size && current.buffer_id) [[likely]] {
-        return;
-    }
-    channel_state->uniform_buffers[stage][index] = Binding{
+    const Binding binding{
         .device_addr = *device_addr,
         .size = size,
         .buffer_id = BufferId{},
     };
+    channel_state->uniform_buffers[stage][index] = binding;
 }
 
 template <class P>

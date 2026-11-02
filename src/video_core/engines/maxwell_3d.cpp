@@ -721,23 +721,18 @@ void Maxwell3D::ProcessCBBind(size_t stage_index) {
     if (bind_data.shader_slot >= Regs::MaxConstBuffers) {
         return; // slot field is 5 bits; the state array holds 18
     }
-    const bool is_enabled = bind_data.valid.Value() != 0;
     auto& buffer = state.shader_stages[stage_index].const_buffers[bind_data.shader_slot];
-    const GPUVAddr gpu_addr = regs.const_buffer.Address();
-    const u32 size = regs.const_buffer.size;
+    buffer.enabled = bind_data.valid.Value() != 0;
+    buffer.address = regs.const_buffer.Address();
+    buffer.size = regs.const_buffer.size;
 
-    if (buffer.enabled == is_enabled && (!is_enabled || (buffer.address == gpu_addr && buffer.size == size))) [[likely]] {
-        return;
-    }
-
-    buffer.enabled = is_enabled;
-    buffer.address = gpu_addr;
-    buffer.size = size;
-
+    const bool is_enabled = bind_data.valid.Value() != 0;
     if (!is_enabled) {
         rasterizer->DisableGraphicsUniformBuffer(stage_index, bind_data.shader_slot);
         return;
     }
+    const GPUVAddr gpu_addr = regs.const_buffer.Address();
+    const u32 size = regs.const_buffer.size;
     rasterizer->BindGraphicsUniformBuffer(stage_index, bind_data.shader_slot, gpu_addr, size);
 }
 

@@ -31,6 +31,7 @@ public:
 
     void Invalidate() noexcept {
         std::ranges::fill(read_descriptors, 0);
+        std::ranges::fill(bound_ids, Id{0});
     }
 
     [[nodiscard]] std::pair<T, bool> Read(Tegra::MemoryManager const& gpu_memory, u32 index) noexcept {
