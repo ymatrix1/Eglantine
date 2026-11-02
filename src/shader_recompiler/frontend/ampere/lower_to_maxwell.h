@@ -455,6 +455,16 @@ inline LoweredProgram LowerToMaxwell(std::span<const Instruction> code) {
             break;
         }
         case 0x224: { // IMAD register / zero-product move
+            if (insn.Bits(24, 8) == 255 && insn.words[1] == 255 && insn.Bits(74, 1) &&
+                (insn.words[2] & ~0x38000ffU) == 0x000e0400) {
+                const u32 c = insn.Bits(64, 8);
+                const u32 condition = insn.Bits(87, 3);
+                mov_imm(252, 1);
+                emit(0x5ca0000000000000ULL | predicate | 251 | (u64{252} << 8) | (u64{255} << 20) |
+                     (u64{condition} << 39) | (u64{insn.Bits(90, 1)} << 42));
+                emit(base(0x5c10000000000000ULL) | (u64{c} << 8) | (u64{251} << 20));
+                break;
+            }
             if (insn.Bits(24, 8) == 255 && insn.words[1] == 255 && insn.Bits(75, 1) &&
                 (insn.words[2] & ~0xaffU) == 0x078e0000) {
                 emit(base(0x5c10000000000000ULL) | (u64{255} << 8) |
@@ -588,13 +598,14 @@ inline LoweredProgram LowerToMaxwell(std::span<const Instruction> code) {
         }
         case 0x886: { // VOTEU ballot and independent uniform predicate output.
             const u32 output = insn.Bits(81, 3), target = insn.Bits(16, 8);
-            if ((target >= 16 && target != 63) || insn.words[1] ||
+            const u32 target_reg = uniform_register(target);
+            if (target_reg == ~0U || insn.words[1] ||
                 insn.Bits(72, 2) > 2 || native_predicate != 7)
                 return fail(index, "native uniform vote mode");
             const u32 temporary = output == 7 ? 7 : 6 - output;
             const u32 mask = 1U << temporary;
             if (output != 7) emit(0x38e8000000070000ULL | 253 | (u64{255} << 8) | (u64{mask} << 20));
-            emit(0x50d8000000070000ULL | uniform_register(target) |
+            emit(0x50d8000000070000ULL | target_reg |
                 (u64{insn.Bits(87, 4)} << 39) | (u64{temporary} << 45) | (u64{insn.Bits(72, 2)} << 48));
             if (output != 7) {
                 emit(0x38e8000000070000ULL | 239 | (u64{239} << 8) | (u64{mask} << 20));
@@ -1756,7 +1767,8 @@ inline LoweredProgram LowerToMaxwell(std::span<const Instruction> code) {
         }
         case 0x308: case 0xb08: case 0xd08: { // MUFU
             const u32 operation = insn.Bits(74, 6);
-            if (operation > 8 || operation == 6 || operation == 7 || insn.Bits(80, 12)) return fail(index, "native MUFU mode");
+            if (operation > 8 || operation == 6 || operation == 7 || insn.Bits(80, 11) ||
+                insn.Bits(91, 1) != static_cast<u32>(opcode == 0xd08)) return fail(index, "native MUFU mode");
             // SM70+ MUFU.COS/SIN take the angle in turns (compilers multiply by 1/2pi first);
             // Eden's Maxwell MUFU takes radians (its RRO is a plain move), so scale by 2pi.
             const bool turns = operation == 0 || operation == 1;
