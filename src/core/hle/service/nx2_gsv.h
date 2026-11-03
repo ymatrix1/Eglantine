@@ -1574,7 +1574,7 @@ private:
                 bool done{};
             };
             auto wake = std::make_shared<Wake>();
-            syncpoints.RegisterGuestAction(fence_id, fence_value, [wake] {
+            const auto handle = syncpoints.RegisterGuestAction(fence_id, fence_value, [wake] {
                 {
                     std::scoped_lock lk{wake->mutex};
                     wake->done = true;
@@ -1585,6 +1585,9 @@ private:
             while (!wake->done && system.IsPoweredOn() &&
                    std::chrono::steady_clock::now() < deadline) {
                 wake->cv.wait_for(lk, std::chrono::milliseconds{50});
+            }
+            if (!wake->done && handle != 0) {
+                syncpoints.DeregisterGuestAction(fence_id, handle);
             }
         }
         if (!syncpoints.IsReadyGuest(fence_id, fence_value) && m_wait_timeouts++ < 64) {

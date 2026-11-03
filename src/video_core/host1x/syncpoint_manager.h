@@ -27,12 +27,13 @@ public:
     }
 
     struct RegisteredAction {
-        explicit RegisteredAction(u32 expected_value_, std::function<void()>&& action_)
-            : expected_value{expected_value_}, action{std::move(action_)} {}
-        u32 expected_value;
+        explicit RegisteredAction(u64 id_, u32 expected_value_, std::function<void()>&& action_)
+            : id{id_}, expected_value{expected_value_}, action{std::move(action_)} {}
+        u64 id{};
+        u32 expected_value{};
         std::function<void()> action;
     };
-    using ActionHandle = std::list<RegisteredAction>::iterator;
+    using ActionHandle = u64;
 
     template <typename Func>
     ActionHandle RegisterGuestAction(u32 syncpoint_id, u32 expected_value, Func&& action) {
@@ -85,6 +86,8 @@ private:
 
     std::array<std::list<RegisteredAction>, NUM_MAX_SYNCPOINTS> guest_action_storage;
     std::array<std::list<RegisteredAction>, NUM_MAX_SYNCPOINTS> host_action_storage;
+
+    std::atomic<u64> next_action_id{1};
 
     std::mutex guard;
     std::condition_variable wait_guest_cv;

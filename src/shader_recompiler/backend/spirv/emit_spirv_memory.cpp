@@ -79,19 +79,19 @@ void WriteStorageByCasLoop(EmitContext& ctx, const IR::Value& binding, const IR:
 } // Anonymous namespace
 
 void EmitLoadGlobalU8(EmitContext&) {
-    throw NotImplementedException("SPIR-V Instruction");
+    LOG_WARNING(Shader_SPIRV, "LoadGlobalU8 not supported, ignoring memory operation");
 }
 
 void EmitLoadGlobalS8(EmitContext&) {
-    throw NotImplementedException("SPIR-V Instruction");
+    LOG_WARNING(Shader_SPIRV, "LoadGlobalS8 not supported, ignoring memory operation");
 }
 
 void EmitLoadGlobalU16(EmitContext&) {
-    throw NotImplementedException("SPIR-V Instruction");
+    LOG_WARNING(Shader_SPIRV, "LoadGlobalU16 not supported, ignoring memory operation");
 }
 
 void EmitLoadGlobalS16(EmitContext&) {
-    throw NotImplementedException("SPIR-V Instruction");
+    LOG_WARNING(Shader_SPIRV, "LoadGlobalS16 not supported, ignoring memory operation");
 }
 
 Id EmitLoadGlobal32(EmitContext& ctx, Id address) {
@@ -119,19 +119,19 @@ Id EmitLoadGlobal128(EmitContext& ctx, Id address) {
 }
 
 void EmitWriteGlobalU8(EmitContext&) {
-    throw NotImplementedException("SPIR-V Instruction");
+    LOG_WARNING(Shader_SPIRV, "WriteGlobalU8 not supported, ignoring memory operation");
 }
 
 void EmitWriteGlobalS8(EmitContext&) {
-    throw NotImplementedException("SPIR-V Instruction");
+    LOG_WARNING(Shader_SPIRV, "WriteGlobalS8 not supported, ignoring memory operation");
 }
 
 void EmitWriteGlobalU16(EmitContext&) {
-    throw NotImplementedException("SPIR-V Instruction");
+    LOG_WARNING(Shader_SPIRV, "WriteGlobalU16 not supported, ignoring memory operation");
 }
 
 void EmitWriteGlobalS16(EmitContext&) {
-    throw NotImplementedException("SPIR-V Instruction");
+    LOG_WARNING(Shader_SPIRV, "WriteGlobalS16 not supported, ignoring memory operation");
 }
 
 void EmitWriteGlobal32(EmitContext& ctx, Id address, Id value) {

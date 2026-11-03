@@ -4,6 +4,8 @@
 // SPDX-FileCopyrightText: 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+#include <vector>
+
 #include "video_core/host1x/syncpoint_manager.h"
 
 namespace Tegra {
@@ -15,14 +17,15 @@ SyncpointManager::ActionHandle SyncpointManager::RegisterAction(
     std::function<void()>&& action) {
     if (syncpoint.load(std::memory_order_acquire) >= expected_value) {
         action();
-        return {};
+        return 0;
     }
 
     std::scoped_lock lk(guard);
     if (syncpoint.load(std::memory_order_relaxed) >= expected_value) {
         action();
-        return {};
+        return 0;
     }
+    const u64 id = next_action_id.fetch_add(1, std::memory_order_relaxed);
     auto it = action_storage.begin();
     while (it != action_storage.end()) {
         if (it->expected_value >= expected_value) {
@@ -30,19 +33,18 @@ SyncpointManager::ActionHandle SyncpointManager::RegisterAction(
         }
         ++it;
     }
-    return action_storage.emplace(it, expected_value, std::move(action));
+    action_storage.emplace(it, id, expected_value, std::move(action));
+    return id;
 }
 
 void SyncpointManager::DeregisterAction(std::list<RegisteredAction>& action_storage,
                                         const ActionHandle& handle) {
+    if (handle == 0) {
+        return;
+    }
     std::scoped_lock lk(guard);
-
-    // We want to ensure the iterator still exists prior to erasing it
-    // Otherwise, if an invalid iterator was passed in then it could lead to UB
-    // It is important to avoid UB in that case since the deregister isn't called from a locked
-    // context
-    for (auto it = action_storage.begin(); it != action_storage.end(); it++) {
-        if (it == handle) {
+    for (auto it = action_storage.begin(); it != action_storage.end(); ++it) {
+        if (it->id == handle) {
             action_storage.erase(it);
             return;
         }
@@ -75,17 +77,27 @@ void SyncpointManager::WaitHost(u32 syncpoint_id, u32 expected_value) {
 
 void SyncpointManager::Increment(std::atomic<u32>& syncpoint, std::condition_variable& wait_cv,
                                  std::list<RegisteredAction>& action_storage) {
-    auto new_value{syncpoint.fetch_add(1, std::memory_order_acq_rel) + 1};
+    const auto new_value{syncpoint.fetch_add(1, std::memory_order_acq_rel) + 1};
 
-    std::scoped_lock lk(guard);
-    auto it = action_storage.begin();
-    while (it != action_storage.end()) {
-        if (it->expected_value > new_value) {
-            break;
+    std::vector<std::function<void()>> ready_actions;
+    {
+        std::scoped_lock lk(guard);
+        auto it = action_storage.begin();
+        while (it != action_storage.end()) {
+            if (it->expected_value > new_value) {
+                break;
+            }
+            if (it->action) {
+                ready_actions.push_back(std::move(it->action));
+            }
+            it = action_storage.erase(it);
         }
-        it->action();
-        it = action_storage.erase(it);
     }
+
+    for (auto& action : ready_actions) {
+        action();
+    }
+
     wait_cv.notify_all();
 }
 
