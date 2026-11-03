@@ -318,7 +318,7 @@ std::optional<LowAddrInfo> TrackLowAddress(IR::Inst* inst) {
         }
         addr_inst = iadd_addr.InstRecursive();
     }
-    if (addr_inst->GetOpcode() == IR::Opcode::UConvert) {
+    if (addr_inst->GetOpcode() == IR::Opcode::ConvertU64U32) {
         return LowAddrInfo{
             .value{IR::U32{addr_inst->Arg(0)}},
             .imm_offset = imm_offset,
