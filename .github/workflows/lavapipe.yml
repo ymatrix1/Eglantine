@@ -47,7 +47,7 @@ jobs:
             libva-dev libvdpau-dev spirv-tools spirv-headers libusb-1.0-0-dev \
             libboost-dev libboost-fiber-dev libboost-context-dev \
             libopus-dev libasound2-dev ccache catch2 mold \
-            libvulkan1 mesa-vulkan-drivers vulkan-tools
+            libvulkan1 mesa-vulkan-drivers vulkan-tools vulkan-validationlayers
 
       # Fail here, not inside a skipped test, if the software driver is missing.
       - name: Verify lavapipe is the Vulkan device
@@ -104,6 +104,7 @@ jobs:
 
       - name: Check the Vulkan test ran instead of skipping
         run: |
+          if grep -q "Validation Error" vulkan-tests.log; then echo "::error::Vulkan validation errors in log"; exit 1; fi
           grep -qiE "skipped" vulkan-tests.log && { echo "::error::Vulkan test was skipped"; exit 1; } || true
           grep -qE "passed" vulkan-tests.log
 
