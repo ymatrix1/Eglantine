@@ -23,8 +23,7 @@ VkBool32 VKAPI_PTR CountErrors(VkDebugUtilsMessageSeverityFlagBitsEXT severity,
     if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
         ++validation_errors;
         // CI greps the log for this exact string.
-        std::fprintf(stderr, "Validation Error: %s
-", data->pMessage);
+        std::fprintf(stderr, "Validation Error: %s\n", data->pMessage);
     }
     return VK_FALSE;
 }
