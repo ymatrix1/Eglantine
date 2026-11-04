@@ -89,7 +89,8 @@ jobs:
             -DENABLE_UPDATE_CHECKER=OFF \
             -DUSE_DISCORD_PRESENCE=OFF \
             -DENABLE_WERROR=OFF \
-            -DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=mold \n            -DUSE_CCACHE=ON
+            -DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=mold \r
+            -DUSE_CCACHE=ON
 
       - name: Build tests
         run: |
